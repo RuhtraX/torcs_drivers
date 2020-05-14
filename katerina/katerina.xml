@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    file                 : katerina.xml
+    created              : qui mai 14 15:54:05 -03 2020
+    copyright            : (C) 2002 Arthur Cervantes
+-->
+
+<!--    This program is free software; you can redistribute it and/or modify  -->
+<!--    it under the terms of the GNU General Public License as published by  -->
+<!--    the Free Software Foundation; either version 2 of the License, or     -->
+<!--    (at your option) any later version.                                   -->
+
+<!DOCTYPE params SYSTEM "../../libs/tgf/params.dtd">
+<params name="katerina" type="robotdef">
+  <section name="Robots">
+    <section name="index">
+      <section name="0">
+	<attstr name="name" val="katerina 1"></attstr>
+	<attstr name="desc" val=""></attstr>
+	<attstr name="team" val=""></attstr>
+	<attstr name="author" val="Arthur Cervantes"></attstr>
+	<attstr name="car name" val="car1-stock1"></attstr>
+	<attstr name="category" val="stock1"></attstr>
+	<attnum name="race number" val="0"></attnum>
+	<attnum name="red" val="1.0"></attnum>
+	<attnum name="green" val="1.0"></attnum>
+	<attnum name="blue" val="1.0"></attnum>
+      </section>
+		</section>
+	</section>
+</params>
