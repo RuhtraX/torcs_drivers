@@ -4,6 +4,8 @@ const float Driver::MAX_UNSTUCK_SPEED = 5.0;
 const float Driver::MIN_UNSTUCK_DIST = 3.0;
 const float Driver::MAX_UNSTUCK_ANGLE = 20.0/180.0*PI; // [radians]
 const float Driver::UNSTUCK_TIME_LIMIT = 2.0;
+const float Driver::G = 9.81;
+const float Driver::FULL_ACCEL_MARGIN = 1.0;
 
 Driver::Driver(int index)
 {
@@ -40,9 +42,73 @@ void Driver::drive(tCarElt* car, tSituation *s)
     } else {
         float steerangle = angle - car->_trkPos.toMiddle/car->_trkPos.seg->width;
         car->ctrl.steer = steerangle / car->_steerLock;
-        car->ctrl.gear = 1; // first gear
-        car->ctrl.accelCmd = 0.3;
-        car->ctrl.brakeCmd = 0.0;
+        car->ctrl.gear = 3; // third gear
+        car->ctrl.brakeCmd = getBrake(car);
+        if (car->ctrl.brakeCmd == 0.0) {
+            car->ctrl.accelCmd = getAccel(car);
+        } else {
+            car->ctrl.accelCmd = 0.0;
+        }
+    }
+}
+
+// Compute the allowed speed on a segment
+float Driver::getAllowedSpeed(tTrackSeg *segment)
+{
+    if (segment->type == TR_STR) {
+        return FLT_MAX;
+    } else {
+        float mu = segment->surface->kFriction;
+        return sqrt(mu*G*segment->radius);
+    }
+}
+
+// Compute the length to the end of the segment
+float Driver::getDistToSegEnd(tCarElt* car)
+{
+    if (car->_trkPos.seg->type == TR_STR) {
+        return car->_trkPos.seg->length - car->_trkPos.toStart;
+    } else {
+        return (car->_trkPos.seg->arc - car->_trkPos.toStart)*car->_trkPos.seg->radius;
+    }
+}
+
+// Compute fitting braking
+float Driver::getBrake(tCarElt* car)
+{
+    tTrackSeg *segptr = car->_trkPos.seg;
+    float currentspeedsqr = car->_speed_x*car->_speed_x;
+    float mu = segptr->surface->kFriction;
+    float maxlookaheaddist = currentspeedsqr/(2.0*mu*G);
+    float lookaheaddist = getDistToSegEnd(car);
+    float allowedspeed = getAllowedSpeed(segptr);
+    if (allowedspeed < car->_speed_x) return 0.7;
+    segptr = segptr->next;
+    while (lookaheaddist < maxlookaheaddist) {
+        allowedspeed = getAllowedSpeed(segptr);
+        if (allowedspeed < car->_speed_x) {
+            float allowedspeedsqr = allowedspeed*allowedspeed;
+            float brakedist = (currentspeedsqr - allowedspeedsqr) / (2.0*mu*G);
+            if (brakedist > lookaheaddist) {
+                return 0.9;
+            }
+        }
+        lookaheaddist += segptr->length;
+        segptr = segptr->next;
+    }
+    return 0.0;
+}
+
+// Compute fitting acceleration
+float Driver::getAccel(tCarElt* car)
+{
+    float allowedspeed = getAllowedSpeed(car->_trkPos.seg);
+    float gr = car->_gearRatio[car->_gear + car->_gearOffset];
+    float rm = car->_enginerpmRedLine;
+    if (allowedspeed > car->_speed_x + FULL_ACCEL_MARGIN) {
+        return 1.0;
+    } else {
+        return allowedspeed/car->_wheelRadius(REAR_RGT)*gr / rm;
     }
 }
 

@@ -24,6 +24,10 @@ class Driver {
 		void drive(tCarElt* car, tSituation *s);
 		int pitCommand(tCarElt* car, tSituation *s);
 		void endRace(tCarElt *car, tSituation *s);
+    float getAllowedSpeed(tTrackSeg *segment);
+    float getAccel(tCarElt* car);
+    float getDistToSegEnd(tCarElt* car);
+    float getBrake(tCarElt* car);
 	private:
 		// utility functions
 		bool isStuck(tCarElt* car);
@@ -43,6 +47,8 @@ class Driver {
 		static const float UNSTUCK_TIME_LIMIT;
     static const float MAX_UNSTUCK_SPEED;
     static const float MIN_UNSTUCK_DIST;
+    static const float G;
+    static const float FULL_ACCEL_MARGIN;
 
 		// track variables
 		tTrack* track;
