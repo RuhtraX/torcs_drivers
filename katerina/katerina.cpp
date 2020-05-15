@@ -54,7 +54,7 @@ katerina(tModInfo *modInfo)
     modInfo->desc    = strdup("");	/* description of the module (can be long) */
     modInfo->fctInit = InitFuncPt;		/* init function */
     modInfo->gfId    = ROB_IDENT;		/* supported framework version */
-    modInfo->index   = 1;
+    modInfo->index   = 0;
 
     return 0; 
 } 
