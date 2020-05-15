@@ -31,6 +31,10 @@
 #include <robottools.h>
 #include <robot.h>
 
+#include "driver.h"
+
+static Driver *driver[1];
+
 static tTrack	*curTrack;
 
 static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s); 
@@ -65,6 +69,9 @@ InitFuncPt(int index, void *pt)
 { 
     tRobotItf *itf  = (tRobotItf *)pt; 
 
+    // create robot instance for index
+    driver[index] = new Driver(index);
+
     itf->rbNewTrack = initTrack; /* Give the robot the track view called */ 
 				 /* for every track change or new race */ 
     itf->rbNewRace  = newrace; 	 /* Start a new race */
@@ -80,72 +87,39 @@ InitFuncPt(int index, void *pt)
 static void  
 initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s) 
 { 
-    curTrack = track;
-    *carParmHandle = NULL; 
+    driver[index]->initTrack(track, carHandle, carParmHandle, s);
 } 
 
 /* Start a new race. */
-static void  
-newrace(int index, tCarElt* car, tSituation *s) 
-{ 
+static void newrace(int index, tCarElt* car, tSituation *s) 
+{
+    driver[index]->newRace(car, s);
 } 
 
-// counter
-static int stuck = 0;
-
-// check if the car is stuck
-bool isStuck(tCarElt* car)
-{
-    float angle = RtTrackSideTgAngleL(&(car->_trkPos)) - car->_yaw;
-    NORM_PI_PI(angle);
-    // angle smaller than 30 degrees?
-    if (fabs(angle) < 30.0/180.0*PI) {
-        stuck = 0;
-        return false;
-    }
-    if (stuck < 100) {
-        stuck++;
-        return false;
-    } else {
-        return true;
-    }
-}
 /* Drive during race. */
 static void  
 drive(int index, tCarElt* car, tSituation *s) 
 { 
-    float angle;
-    const float SC = 1.0;
+    driver[index]->drive(car, s);
+}
 
-    memset(&car->ctrl, 0, sizeof(tCarCtrl)); 
-
-    if (isStuck(car)) {
-        angle = -RtTrackSideTgAngleL(&(car->_trkPos)) + car->_yaw;
-        NORM_PI_PI(angle); // put the angle back in the range from -PI to PI
-        car->ctrl.steer = angle / car->_steerLock;
-        car->ctrl.gear = -1; // reverse gear
-        car->ctrl.accelCmd = 0.3; // 30% accelerator pedal
-        car->ctrl.brakeCmd = 0.0; // no brakes
-    } else {
-        angle = RtTrackSideTgAngleL(&(car->_trkPos)) - car->_yaw;
-        NORM_PI_PI(angle); // put the angle back in the range from -PI to PI
-        angle -= SC*car->_trkPos.toMiddle/car->_trkPos.seg->width;
-        car->ctrl.steer = angle / car->_steerLock;
-        car->ctrl.gear = 1; // first gear
-        car->ctrl.accelCmd = 0.3; // 30% accelerator pedal
-        car->ctrl.brakeCmd = 0.0; // no brakes
-    }
+// Pitstop callback
+static int pitcmd(int index, tCarElt* car, tSituation *s)
+{
+    return driver[index]->pitCommand(car, s);
 }
 
 /* End of the current race */
 static void
 endrace(int index, tCarElt *car, tSituation *s)
 {
+    driver[index]->endRace(car, s);
 }
 
 /* Called before the module is unloaded */
 static void
 shutdown(int index)
 {
+    delete driver[index];
 }
 
