@@ -2,3 +2,6 @@
 *.rgb
 *.xcf
 *.o
+*.def
+*.dsp
+.depend
