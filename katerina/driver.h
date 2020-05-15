@@ -28,6 +28,7 @@ class Driver {
     float getAccel(tCarElt* car);
     float getDistToSegEnd(tCarElt* car);
     float getBrake(tCarElt* car);
+    int getGear(tCarElt *car);
 	private:
 		// utility functions
 		bool isStuck(tCarElt* car);
@@ -49,6 +50,8 @@ class Driver {
     static const float MIN_UNSTUCK_DIST;
     static const float G;
     static const float FULL_ACCEL_MARGIN;
+    static const float SHIFT;
+    static const float SHIFT_MARGIN;
 
 		// track variables
 		tTrack* track;
