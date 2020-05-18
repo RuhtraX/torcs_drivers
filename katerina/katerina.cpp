@@ -40,7 +40,8 @@ static tTrack	*curTrack;
 static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s); 
 static void newrace(int index, tCarElt* car, tSituation *s); 
 static void drive(int index, tCarElt* car, tSituation *s); 
-static void endrace(int index, tCarElt *car, tSituation *s);
+static int pitcmd(int index, tCarElt* car, tSituation *s);
+static void endrace(int index, tCarElt* car, tSituation *s);
 static void shutdown(int index);
 static int  InitFuncPt(int index, void *pt); 
 
@@ -64,8 +65,7 @@ katerina(tModInfo *modInfo)
 } 
 
 /* Module interface initialization. */
-static int 
-InitFuncPt(int index, void *pt) 
+static int InitFuncPt(int index, void *pt) 
 { 
     tRobotItf *itf  = (tRobotItf *)pt; 
 
@@ -76,7 +76,7 @@ InitFuncPt(int index, void *pt)
 				 /* for every track change or new race */ 
     itf->rbNewRace  = newrace; 	 /* Start a new race */
     itf->rbDrive    = drive;	 /* Drive during race */
-    itf->rbPitCmd   = NULL;
+    itf->rbPitCmd   = pitcmd;
     itf->rbEndRace  = endrace;	 /* End of the current race */
     itf->rbShutdown = shutdown;	 /* Called before the module is unloaded */
     itf->index      = index; 	 /* Index used if multiple interfaces */
@@ -84,8 +84,7 @@ InitFuncPt(int index, void *pt)
 } 
 
 /* Called for every track change or new race. */
-static void  
-initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s) 
+static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s) 
 { 
     driver[index]->initTrack(track, carHandle, carParmHandle, s);
 } 
@@ -97,23 +96,22 @@ static void newrace(int index, tCarElt* car, tSituation *s)
 } 
 
 /* Drive during race. */
-static void  
-drive(int index, tCarElt* car, tSituation *s) 
+static void drive(int index, tCarElt* car, tSituation *s) 
 { 
-    driver[index]->drive(car, s);
+    driver[index]->drive(s);
 }
 
 // Pitstop callback
 static int pitcmd(int index, tCarElt* car, tSituation *s)
 {
-    return driver[index]->pitCommand(car, s);
+    return driver[index]->pitCommand(s);
 }
 
 /* End of the current race */
 static void
-endrace(int index, tCarElt *car, tSituation *s)
+endrace(int index, tCarElt* car, tSituation *s)
 {
-    driver[index]->endRace(car, s);
+    driver[index]->endRace(s);
 }
 
 /* Called before the module is unloaded */

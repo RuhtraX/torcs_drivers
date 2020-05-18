@@ -21,27 +21,32 @@ class Driver {
 		void initTrack(tTrack* t, void *carhandle,
 									void **carParmHandle, tSituation *s);
 		void newRace(tCarElt* car, tSituation *s);
-		void drive(tCarElt* car, tSituation *s);
-		int pitCommand(tCarElt* car, tSituation *s);
-		void endRace(tCarElt *car, tSituation *s);
-    float getAllowedSpeed(tTrackSeg *segment);
-    float getAccel(tCarElt* car);
-    float getDistToSegEnd(tCarElt* car);
-    float getBrake(tCarElt* car);
-    int getGear(tCarElt *car);
+		void drive(tSituation *s);
+		int pitCommand(tSituation *s);
+		void endRace(tSituation *s);
 	private:
 		// utility functions
-		bool isStuck(tCarElt* car);
-		void update(tCarElt* car, tSituation *s);
+		bool isStuck();
+		void update(tSituation *s);
+    float getAllowedSpeed(tTrackSeg *segment);
+    float getAccel();
+    float getDistToSegEnd();
+    float getBrake();
+    int getGear();
+    void initCa();
 
 		// per robot global data
 		int stuck;
 		float trackangle;
 		float angle;
+    float mass; // mass of car + fuel
+    tCarElt *car;
 
 		// data that should stay constant after first initialization
 		int MAX_UNSTUCK_COUNT;
 		int INDEX;
+    float CARMASS; // mass of car only
+    float CA; // aerodynamic downforce coefficient
 
 		// class constants
 		static const float MAX_UNSTUCK_ANGLE;
