@@ -8,6 +8,10 @@ const float Driver::G = 9.81;
 const float Driver::FULL_ACCEL_MARGIN = 1.0;
 const float Driver::SHIFT = 0.9;
 const float Driver::SHIFT_MARGIN = 4.0;
+const float Driver::ABS_SLIP = 0.9;
+const float Driver::ABS_MINSPEED = 3.0;
+const float Driver::TCL_SLIP = 0.9;
+const float Driver::TCL_MINSPEED = 3.0;
 
 Driver::Driver(int index)
 {
@@ -32,6 +36,7 @@ void Driver::newRace(tCarElt *car, tSituation *s)
     mass = CARMASS + car->_fuel;
     initCa();
     initCw();
+    initTCLfilter();
 }
 
 // Drive during race
@@ -50,9 +55,9 @@ void Driver::drive(tSituation *s)
         float steerangle = angle - car->_trkPos.toMiddle/car->_trkPos.seg->width;
         car->ctrl.steer = steerangle / car->_steerLock;
         car->ctrl.gear = getGear();
-        car->ctrl.brakeCmd = getBrake();
+        car->ctrl.brakeCmd = filterABS(getBrake());
         if (car->ctrl.brakeCmd == 0.0) {
-            car->ctrl.accelCmd = getAccel();
+            car->ctrl.accelCmd = filterTCL(getAccel());
         } else {
             car->ctrl.accelCmd = 0.0;
         }
@@ -134,6 +139,20 @@ float Driver::getBrake()
     return 0.0;
 }
 
+// Antilocking filter for brakes
+float Driver::filterABS(float brake)
+{
+    if (car->_speed_x < ABS_MINSPEED) return brake;
+    int i;
+    float slip = 0.0;
+    for (i=0; i<4; i++){
+        slip += car->_wheelSpinVel(i) * car->_wheelRadius(i) / car->_speed_x;
+    }
+    slip = slip/4.0;
+    if (slip < ABS_SLIP) brake = brake*slip;
+    return brake;
+}
+
 // Compute gear
 int Driver::getGear()
 {
@@ -165,6 +184,48 @@ float Driver::getAccel()
     } else {
         return allowedspeed/car->_wheelRadius(REAR_RGT)*gr / rm;
     }
+}
+
+// TCL filter for accelerator pedal
+float Driver::filterTCL(float accel)
+{
+    if (car->_speed_x < TCL_MINSPEED) return accel;
+    float slip = car->_speed_x/(this->*GET_DRIVEN_WHEEL_SPEED)();
+    if (slip < TCL_SLIP) {
+        accel = 0.0;
+    }
+    return accel;
+}
+
+// Traction Control (TCL) setup
+void Driver::initTCLfilter()
+{
+    const char *traintype = GfParmGetStr(car->_carHandle, SECT_DRIVETRAIN, PRM_TYPE, VAL_TRANS_RWD);
+    if (strcmp(traintype, VAL_TRANS_RWD) == 0) {
+        GET_DRIVEN_WHEEL_SPEED = &Driver::filterTCL_RWD;
+    } else if (strcmp(traintype, VAL_TRANS_FWD) == 0) {
+        GET_DRIVEN_WHEEL_SPEED = &Driver::filterTCL_FWD;
+    } else if (strcmp(traintype, VAL_TRANS_4WD) == 0) {
+        GET_DRIVEN_WHEEL_SPEED = &Driver::filterTCL_4WD;
+    }
+}
+
+// TCL filter plugin for RWD cars
+float Driver::filterTCL_RWD()
+{
+    return (car->_wheelSpinVel(REAR_RGT) + car->_wheelSpinVel(REAR_LFT)) * car ->_wheelRadius(REAR_LFT) / 2.0;
+}
+
+// TCL filter plugin for FWD cars
+float Driver::filterTCL_FWD()
+{
+    return (car->_wheelSpinVel(FRNT_RGT) + car->_wheelSpinVel(FRNT_LFT)) * car->_wheelRadius(FRNT_LFT) / 2.0;
+}
+
+// TCL filter plugin for 4WD cars
+float Driver::filterTCL_4WD()
+{
+    return (car->_wheelSpinVel(FRNT_RGT) + car->_wheelSpinVel(FRNT_LFT)) * car->_wheelRadius(FRNT_LFT) / 4.0 + (car->_wheelSpinVel(REAR_RGT) + car->_wheelSpinVel(REAR_LFT)) * car->_wheelRadius(REAR_LFT) / 4.0;
 }
 
 // Set pitstop commands
