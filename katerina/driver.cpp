@@ -29,8 +29,9 @@ void Driver::newRace(tCarElt *car, tSituation *s)
     stuck = 0;
     this->car = car;
     CARMASS = GfParmGetNum(car->_carHandle, SECT_CAR, PRM_MASS, NULL, 1000.0);
-    initCa();
     mass = CARMASS + car->_fuel;
+    initCa();
+    initCw();
 }
 
 // Drive during race
@@ -74,6 +75,14 @@ void Driver::initCa()
     CA = h*cl + 4.0*wingca;
 }
 
+// Compute aerodynamic drag coefficient CW
+void Driver::initCw()
+{
+    float cx = GfParmGetNum(car->_carHandle, SECT_AERODYNAMICS, PRM_CX, (char*) NULL, 0.0);
+    float frontarea = GfParmGetNum(car->_carHandle, SECT_AERODYNAMICS, PRM_FRNTAREA, (char*) NULL, 0.0);
+    CW = 0.645*cx*frontarea;
+}
+
 // Compute the allowed speed on a segment
 float Driver::getAllowedSpeed(tTrackSeg *segment)
 {
@@ -110,7 +119,11 @@ float Driver::getBrake()
         allowedspeed = getAllowedSpeed(segptr);
         if (allowedspeed < car->_speed_x) {
             float allowedspeedsqr = allowedspeed*allowedspeed;
-            float brakedist = (currentspeedsqr - allowedspeedsqr) / (2.0*mu*G);
+            float c = mu*G;
+            float d = (CA*mu + CW)/mass;
+            float v1sqr = currentspeedsqr;
+            float v2sqr = allowedspeedsqr;
+            float brakedist = -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
             if (brakedist > lookaheaddist) {
                 return 0.9;
             }

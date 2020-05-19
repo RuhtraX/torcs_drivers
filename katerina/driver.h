@@ -34,6 +34,7 @@ class Driver {
     float getBrake();
     int getGear();
     void initCa();
+    void initCw();
 
 		// per robot global data
 		int stuck;
@@ -47,6 +48,7 @@ class Driver {
 		int INDEX;
     float CARMASS; // mass of car only
     float CA; // aerodynamic downforce coefficient
+    float CW; // aerodynamic drag coefficient
 
 		// class constants
 		static const float MAX_UNSTUCK_ANGLE;
