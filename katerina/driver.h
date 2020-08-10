@@ -14,19 +14,19 @@
 #include <robot.h>
 
 class Driver {
-	public:
-		Driver(int index);
+  public:
+    Driver(int index);
 
-		// callback functions called from TORCS
-		void initTrack(tTrack* t, void *carhandle, void **carParmHandle, tSituation *s);
-		void newRace(tCarElt* car, tSituation *s);
-		void drive(tSituation *s);
-		int pitCommand(tSituation *s);
-		void endRace(tSituation *s);
-	private:
-		// utility functions
-		bool isStuck();
-		void update(tSituation *s);
+    // callback functions called from TORCS
+    void initTrack(tTrack* t, void *carhandle, void **carParmHandle, tSituation *s);
+    void newRace(tCarElt* car, tSituation *s);
+    void drive(tSituation *s);
+    int pitCommand(tSituation *s);
+    void endRace(tSituation *s);
+  private:
+    // utility functions
+    bool isStuck();
+    void update(tSituation *s);
     float getAllowedSpeed(tTrackSeg *segment);
     float getAccel();
     float getDistToSegEnd();
@@ -42,23 +42,23 @@ class Driver {
     void initTCLfilter();
     float (Driver::*GET_DRIVEN_WHEEL_SPEED)();
 
-		// per robot global data
-		int stuck;
-		float trackangle;
-		float angle;
+    // per robot global data
+    int stuck;
+    float trackangle;
+    float angle;
     float mass; // mass of car + fuel
     tCarElt *car;
 
-		// data that should stay constant after first initialization
-		int MAX_UNSTUCK_COUNT;
-		int INDEX;
+    // data that should stay constant after first initialization
+    int MAX_UNSTUCK_COUNT;
+    int INDEX;
     float CARMASS; // mass of car only
     float CA; // aerodynamic downforce coefficient
     float CW; // aerodynamic drag coefficient
 
-		// class constants
-		static const float MAX_UNSTUCK_ANGLE;
-		static const float UNSTUCK_TIME_LIMIT;
+    // class constants
+    static const float MAX_UNSTUCK_ANGLE;
+    static const float UNSTUCK_TIME_LIMIT;
     static const float MAX_UNSTUCK_SPEED;
     static const float MIN_UNSTUCK_DIST;
     static const float G;
@@ -70,8 +70,8 @@ class Driver {
     static const float TCL_SLIP;
     static const float TCL_MINSPEED;
 
-		// track variables
-		tTrack* track;
+    // track variables
+    tTrack* track;
 };
 #endif // _DRIVER_H_
 
